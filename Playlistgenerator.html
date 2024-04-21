@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: row;
+            height: 400px;
+        }
+
+        .main-text {
+            background-color: #0C0C0C;
+        }
+
+        .box1 {
+            flex: 1;
+            border-radius: 5px;
+            width: 400px;
+            padding: 15px;
+            background-color: #a827a4;
+            border-color: azure;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            font-size: 25px;
+            font-weight: bold;
+            color: white;
+            position: relative;
+        }
+
+        .player {
+            border: 2px solid rgb(185, 148, 148);
+        }
+
+        .box1:hover {
+            background-color: #720455;
+        }
+
+        .box1 .video-title {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .list-scrollable {
+            height: 392px;
+            padding: 5px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            border-width: 5px;
+            color: aqua;
+        }
+
+        .list-scrollable {
+            scrollbar-width: thin;
+            scrollbar-color: rgb(245, 242, 242) rgb(4, 23, 4);
+        }
+
+        .playlistInput {
+            height: 50px;
+            font-size: 40px;
+        }
+
+        .inputarea {
+            height: 100px;
+        }
+
+        #comments {
+            padding: 10px;
+            background-color: #030637;
+            color: white;
+            margin-top: 10px;
+        }
+
+        #comments h3 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        #comments-container {
+            max-height: 200px;
+            overflow-y: scroll;
+        }
+
+        #dash {
+            font-size: 50px;
+            cursor: pointer;
+            color: aqua;
+            
+            top: 10px; /* Adjust as needed */
+            right: 10px; /* Adjust as needed */
+        }
+
+        .username {
+            color: yellow;
+        }
+
+        .comment {
+            color: rgb(228, 237, 228);
+        }
+
+        .finishButton {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgb(182, 27, 27);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .completed {
+            background-color: green !important;
+        }
+
+        .side-panel {
+            display: none;
+            width: 200px;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background-color: #2a3647;
+            z-index: 1;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .side-panel-arrow {
+            cursor: pointer;
+            font-size: 30px;
+            padding: 10px;
+            text-align: center;
+            background-color: #2a3647;
+            color: white;
+            border: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transform: translateY(-50%);
+            z-index: 2;
+            transition: 0.5s;
+        }
+
+        .side-panel-content {
+            padding: 20px;
+            color: white;
+        }
+
+        .progress {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 50%; /* Set the completion percentage here */
+            height: 20px;
+            background-color: green;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+<body style="background-color: rgb(66, 54, 54);">
+
+<div class="main-text">
+    <div class="inputarea">
+        <input type="text" style="height: 40px; width: 400px; margin-left: 5px; margin-top: 5px;" id="playlistInput"
+               placeholder="Enter YouTube Playlist URL">
+        <button onclick="createBoxes()" id="playlistButton" style="height: 40px; width: 100px;">Create Boxes
+        </button>
+        <span id="dash">-</span>
+    </div>
+
+    <div class="container">
+        <div class="player">
+            <iframe id="player" width="800" height="390"
+                    src="https://www.youtube.com/embed/h3uDCJ5mvgw?si=xJmhZs90z7mN033o" title="YouTube video player"
+                    frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen></iframe>
+        </div>
+        <div id="boxContainer" class="list-scrollable" style="padding-left: 5px;">
+        </div>
+    </div>
+
+    <div id="comments">
+        <h3>Comments</h3>
+        <div id="comments-container" class="list-scrollable">
+        </div>
+    </div>
+</div>
+
+<div class="side-panel" id="sidePanel">
+    <div class="side-panel-content">
+        <div class="progress"> <!-- Progress bar for playlist completion -->
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <div>Total Videos: <span id="totalVideos">0</span></div>
+        <div>Videos Completed: <span id="videosCompleted">0</span></div>
+    </div>
+</div>
+<button id="sidePanelToggle" class="side-panel-arrow">&#x25BA;</button>
+
+<script>
+    const dash = document.getElementById("dash");
+    const playlistInput = document.getElementById("playlistInput");
+    const playlistButton = document.getElementById("playlistButton");
+    const commentsContainer = document.getElementById("comments-container");
+    const sidePanel = document.getElementById("sidePanel");
+    const sidePanelToggle = document.getElementById("sidePanelToggle");
+
+    let isHidden = false;
+    let totalVideos = 0;
+    let videosCompleted = 0;
+
+    dash.addEventListener("click", function () {
+        if (isHidden) {
+            playlistInput.style.display = "inline-block";
+            playlistButton.style.display = "inline-block";
+            isHidden = false;
+        } else {
+            playlistInput.style.display = "none";
+            playlistButton.style.display = "none";
+            isHidden = true;
+        }
+    });
+
+    let nextPageToken = '';
+
+    function createBoxes() {
+        const playlistUrl = document.getElementById("playlistInput").value;
+        const playlistId = getPlaylistId(playlistUrl);
+
+        const fetchVideos = () => {
+            let url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + playlistId + "&key=AIzaSyDru4McgKQ1TEIIXLez0TMHhW0D9QfYg2Q";
+            if (nextPageToken) {
+                url += "&pageToken=" + nextPageToken;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const videos = data.items;
+                    const boxContainer = document.getElementById("boxContainer");
+
+                    videos.forEach((video, index) => {
+                        const videoId = video.snippet.resourceId.videoId;
+                        const videoTitle = video.snippet.title;
+                        const box = document.createElement("div");
+                        box.className = "box1";
+                        box.textContent = videoTitle;
+                        const finishButton = document.createElement("button");
+                        finishButton.className = "finishButton";
+                        finishButton.textContent = "Finish";
+                        finishButton.onclick = function () {
+                            if (!finishButton.classList.contains("completed")) {
+                                finishButton.classList.add("completed");
+                                videosCompleted++;
+                                updateProgress();
+                            }
+                        };
+                        box.appendChild(finishButton);
+                        box.onclick = function () {
+                            changeVideo(videoId);
+                            fetchComments(videoId);
+                        };
+                        boxContainer.appendChild(box);
+                        totalVideos++;
+                    });
+
+                    // Update nextPageToken for pagination
+                    nextPageToken = data.nextPageToken;
+
+                    // Fetch next page if nextPageToken exists
+                    if (nextPageToken) {
+                        fetchVideos();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching playlist:", error);
+                });
+        };
+
+        fetchVideos();
+    }
+
+    function fetchComments(videoId) {
+        fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=AIzaSyDru4McgKQ1TEIIXLez0TMHhW0D9QfYg2Q&maxResults=5`)
+            .then(response => response.json())
+            .then(data => {
+                const comments = data.items;
+                commentsContainer.innerHTML = "";
+                comments.forEach(comment => {
+                    const username = comment.snippet.topLevelComment.snippet.authorDisplayName;
+                    const commentText = comment.snippet.topLevelComment.snippet.textDisplay;
+                    const commentElement = document.createElement("div");
+                    const usernameSpan = document.createElement("span");
+                    usernameSpan.textContent = `${username}: `;
+                    usernameSpan.className = "username";
+                    commentElement.appendChild(usernameSpan);
+                    const commentSpan = document.createElement("span");
+                    commentSpan.textContent = commentText;
+                    commentSpan.className = "comment";
+                    commentElement.appendChild(commentSpan);
+                    commentsContainer.appendChild(commentElement);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching comments:", error);
+            });
+    }
+
+    function changeVideo(videoId) {
+        document.getElementById("player").src = "https://www.youtube.com/embed/" + videoId;
+    }
+
+    function getPlaylistId(playlistUrl) {
+        const urlParams = new URLSearchParams(new URL(playlistUrl).search);
+        return urlParams.get("list");
+    }
+
+    function updateProgress() {
+        const progressBar = document.getElementById("progressBar");
+        const totalVideosSpan = document.getElementById("totalVideos");
+        const videosCompletedSpan = document.getElementById("videosCompleted");
+        totalVideosSpan.textContent = totalVideos;
+        videosCompletedSpan.textContent = videosCompleted;
+        const completionPercentage = Math.round((videosCompleted / totalVideos) * 100);
+        progressBar.style.width = completionPercentage + "%";
+    }
+
+    sidePanelToggle.addEventListener("click", function () {
+        if (sidePanel.style.display === "none" || sidePanel.style.display === "") {
+            sidePanel.style.display = "block";
+        } else {
+            sidePanel.style.display = "none";
+        }
+    });
+</script>
+
+</body>
+</html>
+
+
