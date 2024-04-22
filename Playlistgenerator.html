@@ -238,7 +238,7 @@
         const playlistId = getPlaylistId(playlistUrl);
 
         const fetchVideos = () => {
-            let url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + playlistId + "&key=AIzaSyDru4McgKQ1TEIIXLez0TMHhW0D9QfYg2Q";
+            let url = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=" + playlistId + "&key=API KEY HERE";
             if (nextPageToken) {
                 url += "&pageToken=" + nextPageToken;
             }
@@ -291,7 +291,7 @@
     }
 
     function fetchComments(videoId) {
-        fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=AIzaSyDru4McgKQ1TEIIXLez0TMHhW0D9QfYg2Q&maxResults=5`)
+        fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&key=API KEY HERE &maxResults=5`)
             .then(response => response.json())
             .then(data => {
                 const comments = data.items;
